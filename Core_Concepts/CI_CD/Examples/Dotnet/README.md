@@ -1,4 +1,4 @@
-### **README: CI/CD Pipeline Examples for Deploying a Basic .NET Web API Application**
+### **CI/CD Pipeline Examples for Deploying a Basic .NET Web API Application**
 
 This repository provides two practical examples of setting up CI/CD pipelines to deploy a basic .NET Web API application:
 
@@ -119,31 +119,6 @@ This example demonstrates how to set up a CI/CD pipeline using **GitHub Actions*
 4. **Run the Workflow**:
    - Push changes to your repository to trigger the GitHub Actions workflow.
    - Monitor the workflow in the **Actions** tab of your GitHub repository.
-
----
-
-## **How to Use This Repository**
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/your-username/dotnet-ci-cd-examples.git
-   cd dotnet-ci-cd-examples
-   ```
-2. Explore the `src/DotNetWebApi` folder to understand the basic .NET Web API application.
-3. Follow the steps in [Example 1](#example-1-azure-pipelines) or [Example 2](#example-2-github-actions) to set up your CI/CD pipeline.
-4. Modify the pipeline configurations as needed for your specific use case.
-
----
-
-## **Contributing**
-
-Contributions are welcome! If you have suggestions, improvements, or additional examples, feel free to:
-
-1. Fork this repository.
-2. Create a new branch (`git checkout -b feature/your-feature`).
-3. Commit your changes (`git commit -m 'Add some feature'`).
-4. Push to the branch (`git push origin feature/your-feature`).
-5. Open a pull request.
 
 ---
 

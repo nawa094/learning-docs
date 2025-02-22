@@ -1,4 +1,4 @@
-### **README: CI/CD Pipeline Examples for Deploying a Basic React Application**
+### **CI/CD Pipeline Examples for Deploying a Basic React Application**
 
 This repository provides two practical examples of setting up CI/CD pipelines to deploy a basic **React** application:
 
@@ -16,14 +16,13 @@ These examples are designed to help you understand how to implement Continuous I
 - [**Repository Structure**](#repository-structure)
 - [**Connecting Frontend to Backend in Different Environments**](#connecting-frontend-to-backend-in-different-environments)
   - [**1. Environment Variables**](#1-environment-variables)
+  - [**1. Environment Variables**](#1-environment-variables-1)
   - [**2. Access Environment Variables in React**](#2-access-environment-variables-in-react)
   - [**3. Configure CI/CD Pipelines**](#3-configure-cicd-pipelines)
 - [**Example 1: Azure Pipelines**](#example-1-azure-pipelines)
   - [**Steps**](#steps)
 - [**Example 2: GitHub Actions**](#example-2-github-actions)
   - [**Steps**](#steps-1)
-- [**How to Use This Repository**](#how-to-use-this-repository)
-- [**Contributing**](#contributing)
 - [**License**](#license)
 - [**Next Steps**](#next-steps)
 
@@ -84,13 +83,33 @@ Example `.env` file:
 REACT_APP_API_URL=https://api-dev.example.com
 ```
 
+Here's the updated documentation for using environment variables with Vite:
+
+---
+
+### **1. Environment Variables**
+
+- Use environment variables to store the backend API URL for each environment.
+- Create `.env` files for each environment:
+  - `.env.development`: For the `develop` branch.
+  - `.env.uat`: For the `release` branch.
+  - `.env.production`: For the `main` branch.
+
+Example `.env` file:
+
+```env
+VITE_API_URL=https://api-dev.example.com
+```
+
+Note: In Vite, the environment variable names must start with `VITE_` to be exposed to the frontend.
+
 ### **2. Access Environment Variables in React**
 
-- Use `process.env.REACT_APP_API_URL` in your React code to access the backend API URL.
+- Use `import.meta.env.VITE_API_URL` in your React code to access the backend API URL.
 - Example in `src/api.js`:
 
   ```javascript
-  const apiUrl = process.env.REACT_APP_API_URL;
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   export const fetchData = async () => {
     const response = await fetch(`${apiUrl}/data`);
@@ -104,6 +123,10 @@ REACT_APP_API_URL=https://api-dev.example.com
   - `develop` → Use `.env.development`.
   - `release` → Use `.env.uat`.
   - `main` → Use `.env.production`.
+
+---
+
+With Vite, the process for handling environment variables is slightly different from React's Create React App (CRA) which is now deprecated. You need to prefix the variable names with `VITE_` for them to be available in the frontend code.
 
 ---
 
@@ -167,31 +190,6 @@ This example demonstrates how to set up a CI/CD pipeline using **GitHub Actions*
 4. **Run the Workflow**:
    - Push changes to your repository to trigger the GitHub Actions workflow.
    - Monitor the workflow in the **Actions** tab of your GitHub repository.
-
----
-
-## **How to Use This Repository**
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/your-username/react-ci-cd-examples.git
-   cd react-ci-cd-examples
-   ```
-2. Explore the `src/react-app` folder to understand the basic React application.
-3. Follow the steps in [Example 1](#example-1-azure-pipelines) or [Example 2](#example-2-github-actions) to set up your CI/CD pipeline.
-4. Modify the pipeline configurations as needed for your specific use case.
-
----
-
-## **Contributing**
-
-Contributions are welcome! If you have suggestions, improvements, or additional examples, feel free to:
-
-1. Fork this repository.
-2. Create a new branch (`git checkout -b feature/your-feature`).
-3. Commit your changes (`git commit -m 'Add some feature'`).
-4. Push to the branch (`git push origin feature/your-feature`).
-5. Open a pull request.
 
 ---
 
