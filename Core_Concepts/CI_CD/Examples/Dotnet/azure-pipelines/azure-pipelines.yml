@@ -1,0 +1,85 @@
+trigger:
+  branches:
+    include:
+      - main
+      - release
+      - develop
+
+variables:
+  buildConfiguration: 'Release'
+  azureSubscription: 'your-azure-subscription-name' # Replace with your Azure subscription name
+  appNamePrefix: 'DotNetWebApi'
+  resourceGroup: 'your-resource-group-name' # Replace with your Azure resource group name
+
+stages:
+  - stage: Build
+    displayName: 'Build and Test'
+    jobs:
+      - job: Build
+        displayName: 'Build Job'
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: '6.x' # Replace with your .NET version
+              installationPath: $(Agent.ToolsDirectory)/dotnet
+
+          - task: NuGetCommand@2
+            displayName: 'Restore NuGet Packages'
+            inputs:
+              restoreSolution: '**/*.sln'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Build Project'
+            inputs:
+              command: 'build'
+              projects: '**/*.csproj'
+              arguments: '--configuration $(buildConfiguration)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Run Tests'
+            inputs:
+              command: 'test'
+              projects: '**/*Tests.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-build'
+
+  - stage: Deploy
+    displayName: 'Deploy to Azure'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - job: Deploy
+        displayName: 'Deploy Job'
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: 'Publish Project'
+            inputs:
+              command: 'publish'
+              projects: '**/*.csproj'
+              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: 'Deploy to Azure Web App'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appType: 'webApp'
+              WebAppName: '${{ parameters.appName }}'
+              resourceGroupName: $(resourceGroup)
+              package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+
+parameters:
+  - name: appName
+    displayName: 'Azure Web App Name'
+    type: string
+    default: '${{ variables.appNamePrefix }}-${{ replace(variables['Build.SourceBranchName'], '/', '-') }}'
+    values:
+      - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+          value: '$(appNamePrefix)-prod'
+      - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release') }}:
+          value: '$(appNamePrefix)-uat'
+      - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/develop') }}:
+          value: '$(appNamePrefix)-dev'

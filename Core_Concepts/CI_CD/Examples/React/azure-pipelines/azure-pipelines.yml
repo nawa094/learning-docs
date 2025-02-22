@@ -1,0 +1,90 @@
+trigger:
+  branches:
+    include:
+      - main
+      - release
+      - develop
+
+variables:
+  appNamePrefix: 'ReactApp' # Replace with your app name prefix
+  resourceGroup: 'your-resource-group-name' # Replace with your Azure resource group name
+  azureSubscription: 'your-azure-subscription-name' # Replace with your Azure subscription name
+
+stages:
+  - stage: Build
+    displayName: 'Build React App'
+    jobs:
+      - job: Build
+        displayName: 'Build Job'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: UseNode@1
+            inputs:
+              version: '16.x' # Replace with your Node.js version
+
+          - name: Checkout code
+            uses: actions/checkout@v3
+
+          - script: |
+              echo "Setting environment variables for ${{ variables['Build.SourceBranchName']}"
+              if [ "${{ variables['Build.SourceBranchName']}" == "main" ]; then
+                echo "REACT_APP_API_URL=https://api-prod.example.com" > .env
+              elif [ "${{ variables['Build.SourceBranchName']}" == "release" ]; then
+                echo "REACT_APP_API_URL=https://api-uat.example.com" > .env
+              else
+                echo "REACT_APP_API_URL=https://api-dev.example.com" > .env
+              fi
+            displayName: 'Set Environment Variables'
+
+          - script: |
+              npm install
+              npm run build
+            displayName: 'Install Dependencies and Build React App'
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'build'
+              ArtifactName: 'build'
+              publishLocation: 'Container'
+
+  - stage: Deploy
+    displayName: 'Deploy to Azure Static Web App'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - job: Deploy
+        displayName: 'Deploy Job'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              buildType: 'current'
+              artifactName: 'build'
+              downloadPath: '$(Build.ArtifactStagingDirectory)'
+
+          - task: AzureStaticWebApp@0
+            inputs:
+              app_location: '$(Build.ArtifactStagingDirectory)/build'
+              api_location: '' # Leave empty if no API
+              output_location: '' # Leave empty if no custom output location
+              azure_static_web_apps_api_token: $(azureStaticWebAppsToken)
+              skip_app_build: true
+              verbose: true
+            env:
+              AZURE_STATIC_WEB_APPS_RESOURCE_GROUP: $(resourceGroup)
+              AZURE_STATIC_WEB_APPS_NAME: '${{ parameters.appName }}'
+
+parameters:
+  - name: appName
+    displayName: 'Azure Static Web App Name'
+    type: string
+    default: '${{ variables.appNamePrefix }}-${{ replace(variables['Build.SourceBranchName'], '/', '-') }}'
+    values:
+      - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+          value: '$(appNamePrefix)-prod'
+      - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release') }}:
+          value: '$(appNamePrefix)-uat'
+      - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/develop') }}:
+          value: '$(appNamePrefix)-dev'
